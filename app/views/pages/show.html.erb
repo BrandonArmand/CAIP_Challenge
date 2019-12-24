@@ -1,25 +1,194 @@
 <div class="page">
   <div class="page__header">
-    Page
+    <h1>Brandon A. Welsh</h1>
+    <h2><%= params[:search] %></h2>
   </div>
 
   <div class="tabs">
     <div class="tab-menu">
-      <div class="tab-menu__item selected" target="#page1">Page 1</div>
-      <div class="tab-menu__item" target="#page2">Page 2</div>
+      <div class="tab-menu__item selected" target="#page1">Accordian</div>
+      <div class="tab-menu__item" target="#page2">Graph</div>
     </div>
   
     <div class="tab-content " id="page1">
       <div class="card box-shadow">
-        <%= @videos %>
+        <div class="search">
+          <div class="content">
+            <%= form_with(url: "/page", method: "get", local: true) do %>
+              <%= text_field_tag :search, "", class: 'search__bar' %>
+              <%= link_to 'Reset', page_path, class: 'search__reset'  %>
+              <%= submit_tag "Search", class: 'search__submit'  %>
+            <% end %>
+          </div>
+        </div>
+        <% @videos.each do |data| %>
+          <div class="row">
+            <div class="content">
+              <div class="arrow"></div>
+              <h1><%= data["snippet"]["title"]%></h1>
+              <h1><%= data["snippet"]["channelTitle"]%></h1>
+              <h2><%= Date.parse(data["snippet"]["publishedAt"]).strftime("%B %-d, %Y")%></h1>
+            </div>
+            <div id=<%= data["id"]%> class="video-info">
+              <div class="col-left">
+                <a href="https://www.youtube.com/watch?v=<%=data["id"]%>">
+                  <img src=<%= data["snippet"]["thumbnails"]["medium"]["url"] %>>
+                </a>
+              </div>
+              <div class="col-right">
+                <p class="info-title">Description</p>
+                <p class="desc">
+                  <%= data["snippet"]["description"]%>
+                </p>
+              </div>
+              <table class="video-details">
+                <tr>
+                  <th class="info-title">View Count</th>
+                  <th class="info-title">Like Count</th>
+                  <th class="info-title">Tags</th>
+                </tr>
+                <tr>
+                  <td style="width:25%"><%= data["statistics"]["viewCount"] %></td>
+                  <td style="width:25%"><%= data["statistics"]["likeCount"] %></td>
+                  <td><%= data["snippet"]["tags"].join(", ") %></td>
+                </tr>
+              </table>
+            </div> 
+          </div>
+        <% end %>
       </div>
     </div>
   
     <div class="tab-content hidden" id="page2">
       <div class="card box-shadow">
-        page2
+        <div class="graph">
+          <svg id="graph" width="1000" height="500"></svg>
+        </div>
       </div>
     </div>
   </div>
 
+  <div class="page__footer">
+  </div>
+  <script>
+  <% stats = @videos.map { |video| 
+        video["statistics"]
+        .merge({"title" => video["snippet"]["title"]}) 
+      } 
+  %>
+
+  var data = <%= stats.to_json.html_safe %>;
+  
+  var svg = d3.select("#graph"),
+    margin = {
+      top: 20,
+      right: 20,
+      bottom: 30,
+      left: 40
+    },
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom,
+    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var x = d3.scaleBand()
+    .rangeRound([0, width])
+    .paddingInner(0.05)
+    .align(0.1);
+
+  var y = d3.scaleLinear()
+    .rangeRound([height, 0]);
+
+  var z = d3.scaleOrdinal()
+    .range(["#64AEFF", "#AED5FF"]);
+
+  // fix pre-processing
+  var keys = [];
+  for (key in data[0]){
+    if (key == 'likeCount' || key == 'viewCount')
+      keys.push(key);
+  }
+  data.forEach(function(d){
+    d.total = 0;
+    keys.forEach(function(k){
+      d.total += Number(d[k]);
+    })
+  });
+
+  data.sort(function(a, b) {
+    return b.total - a.total;
+  });
+  x.domain(data.map(function(d) {
+    return d.title;
+  }));
+  y.domain([0, d3.max(data, function(d) {
+    return d.total;
+  })]).nice();
+  z.domain(keys);
+
+  g.append("g")
+    .selectAll("g")
+    .data(d3.stack().keys(keys)(data))
+    .enter().append("g")
+    .attr("fill", function(d) {
+      return z(d.key);
+    })
+    .selectAll("rect")
+    .data(function(d) {
+      return d;
+    })
+    .enter().append("rect")
+    .attr("x", function(d) {
+      return x(d.data.title);
+    })
+    .attr("y", function(d) {
+      return y(d[1]);
+    })
+    .attr("height", function(d) {
+      return y(d[0]) - y(d[1]);
+    })
+    .attr("width", x.bandwidth());
+
+  g.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+
+  g.append("g")
+    .attr("class", "axis")
+    .call(d3.axisLeft(y).ticks(null, "s"))
+    .append("text")
+    .attr("x", 2)
+    .attr("y", y(y.ticks().pop()) + 0.5)
+    .attr("dy", "0.32em")
+    .attr("fill", "#000")
+    .attr("font-weight", "bold")
+    .attr("text-anchor", "start")
+    .text("Population");
+
+  var legend = g.append("g")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10)
+    .attr("text-anchor", "end")
+    .selectAll("g")
+    .data(keys.slice().reverse())
+    .enter().append("g")
+    .attr("transform", function(d, i) {
+      return "translate(0," + i * 20 + ")";
+    });
+
+  legend.append("rect")
+    .attr("x", width - 19)
+    .attr("width", 19)
+    .attr("height", 19)
+    .attr("fill", z);
+
+  legend.append("text")
+    .attr("x", width - 24)
+    .attr("y", 9.5)
+    .attr("dy", "0.32em")
+    .text(function(d) {
+      return d;
+    });
+
+  </script>
 </div>

@@ -1,7 +1,21 @@
 class PagesController < ApplicationController
   def show
     _ids = search[:items].collect{ |i| i[:id][:videoId] }
-    @videos = get_full_details(_ids)
+    videoItems = get_full_details(_ids)["items"]
+    @videos = []
+
+    if params[:search]
+      videoItems.each do |video|
+        @videos.push(video) if video["snippet"]["title"].downcase.include?(params[:search].downcase) 
+      end
+    else
+      @videos = videoItems
+    end
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @videos }
+    end
   end
 
   def search

@@ -16,3 +16,4 @@
 //= require jquery
 //= require tab-menu.js
 //= require_tree .
+//= require d3
