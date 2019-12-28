@@ -8,13 +8,18 @@ $(document).on('click', '.tab-menu__item', function() {
 })
 
 $(document).on('click', '.card .row', function(){
-  $('.video-info').slideUp()
-  $(this).find('.video-info').slideToggle()
-  if($(this).find('.arrow').css('transform') == 'matrix(0.707107, -0.707107, 0.707107, 0.707107, 0, 0)'){
-    $(this).find('.arrow').css('transform','rotate(-135deg)')
+  var currentRow = $(this).find('.video-info')
+  var rowArrow = $(this).find('.arrow')
+
+  $('.video-info').not(currentRow).slideUp()
+  currentRow.slideToggle()
+
+  $('.arrow').not(rowArrow).css('transform','rotate(-45deg)')
+
+  if(rowArrow.css('transform') == 'matrix(0.707107, -0.707107, 0.707107, 0.707107, 0, 0)'){
+    rowArrow.css('transform','rotate(-135deg)')
   }
   else{
-    console.log($(this).find('.arrow').css('transform'))
-    $(this).find('.arrow').css('transform','rotate(-45deg)')
+    rowArrow.css('transform','rotate(-45deg)')
   }
 })

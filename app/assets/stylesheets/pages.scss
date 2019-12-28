@@ -76,6 +76,7 @@
         font-weight: normal;
         font-size: 14px;
         line-height: 17px;
+        width: 20%;
       }
 
       form{
@@ -94,8 +95,21 @@
   }
 
   .search{
+    position: relative;
+
     form{
-      width: 100%;;
+      width: 100%;
+
+      input{
+        font-size: 14px;
+      }
+    }
+
+    .icon{
+      position: absolute;
+      top: 25px;
+      left: 23px;
+      color: #656B75;
     }
 
     &__bar{
@@ -105,12 +119,13 @@
       border-radius: 3px;
       border: none;
       padding: 12px;
+      padding-left: 33px;
     }
 
     &__reset, &__submit{
       width:17%;
       height: 40px;
-      //font-family: Montserrat;
+      font-family: Montserrat;
       font-style: normal;
       font-weight: 500;
       font-size: 14px;
@@ -205,7 +220,7 @@
 
   .graph{
     svg {
-      font: 10px sans-serif;
+      font: 10px Montserrat;
       shape-rendering: crispEdges;
     }
   
@@ -222,5 +237,44 @@
     .y .tick line {
       stroke: #ddd;
     }
+  }
+}
+
+div.tooltip {	
+  position: absolute;			
+  text-align: center;			
+  font: 12px Montserrat;		
+  border: solid 1px #333;		
+  pointer-events: none;		
+  
+  .view-count{
+    background: #64AEFF;
+    margin: 0;
+    padding: 5px 10px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+  }
+
+  .like-count{
+    background: #AED5FF;
+    margin: 0;
+    padding: 5px 10px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+  }
+
+  .like-ratio{
+    border-top: solid 2px #333;
+    background: whitesmoke;	
+    margin: 0;
+    padding: 5px 10px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
   }
 }

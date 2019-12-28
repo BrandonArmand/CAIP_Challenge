@@ -6,7 +6,8 @@ class PagesController < ApplicationController
 
     if params[:search]
       videoItems.each do |video|
-        @videos.push(video) if video["snippet"]["title"].downcase.include?(params[:search].downcase) 
+        searchList = [video["snippet"]["title"], video["snippet"]["channelTitle"], video["snippet"]["description"], video["snippet"]["tags"]].join(' ')
+        @videos.push(video) if searchList.downcase.include?(params[:search].downcase) 
       end
     else
       @videos = videoItems

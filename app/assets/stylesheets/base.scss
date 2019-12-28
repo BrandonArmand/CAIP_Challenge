@@ -53,7 +53,8 @@ body {
     text-align: center;
     text-transform: uppercase;
     margin-right: $base-spacing;
-    padding: $small-spacing 0;
+    padding: $small-spacing 20px;
+    padding-right: 10%;
 
     &.selected {
       font-weight: 600;
