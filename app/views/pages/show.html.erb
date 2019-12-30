@@ -8,6 +8,7 @@
     <div class="tab-menu">
       <div class="tab-menu__item selected" target="#page1">Accordian</div>
       <div class="tab-menu__item" target="#page2">Graph</div>
+      <div class="tab-menu__item" target="#page3">Bubbles</div>
     </div>
   
     <div class="tab-content " id="page1">
@@ -22,7 +23,7 @@
             <% end %>
           </div>
         </div>
-        <% @videos.each do |data| %>
+        <% @videos.slice(0,5).each do |data| %>
           <div class="row">
             <div class="content">
               <div class="arrow"></div>
@@ -67,19 +68,34 @@
         </div>
       </div>
     </div>
+
+    <div class="tab-content hidden" id="page3">
+      <div class="card box-shadow">
+        <div class="graph">
+          <svg id="bubble-chart" width="1000" height="500"></svg>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="page__footer">
   </div>
   <script>
-    <% stats = @videos.map { |video| 
+    <% bubble = @videos.collect{|el| 
+          el["snippet"]["tags"]}.join(', ')
+          .split(', ')
+    %>
+
+    <% chart = @videos.slice(0,5).map { |video| 
           video["statistics"]
           .merge({"title" => video["snippet"]["title"]}) 
         } 
     %>
 
-    var data = <%= stats.to_json.html_safe %>;
+    var chart = <%= chart.to_json.html_safe %>;
+    var bubble = <%= bubble.to_json.html_safe %>;
 
-    drawGraph(data)
+    drawGraph(chart)
+    drawBubbles(bubble)
   </script>
 </div>

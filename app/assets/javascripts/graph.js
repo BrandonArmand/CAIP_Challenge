@@ -150,13 +150,113 @@ function drawGraph(data) {
 
     function toComma(number) {
         return number.toString()
-                .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
-    function unCamel(str){
+    function unCamel(str) {
         return str.replace(/([A-Z])/g, ' $1')
-                .replace(/^./, function(str){ 
-                    return str.toUpperCase(); 
-                })
+            .replace(/^./, function (str) {
+                return str.toUpperCase();
+            })
     }
+}
+
+
+function drawBubbles(data) {
+    var dataset = {}
+    var dataArray = []
+
+    data.forEach(function (tag) {
+        if (dataset[tag]) {
+            dataset[tag]++
+        } else {
+            dataset[tag] = 1
+        }
+    })
+
+    for (var el in dataset) {
+        if (el != '' && el != ' ') {
+            dataArray.push({
+                title: el,
+                count: dataset[el]
+            })
+        }
+    }
+
+    var width = 1000
+    var height = 500
+
+    var color = d3.scaleOrdinal(data.map(d => d.title), d3.schemeCategory10)
+
+    var div = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+    function pack(data) {
+        return d3.pack()
+            .size([width - 2, height - 2])
+            .padding(3)
+            (d3.hierarchy({
+                    children: data
+                })
+                .sum(d => d.count))
+    }
+
+    var root = pack(dataArray);
+
+    var svg = d3.select("#bubble-chart")
+        .attr("viewBox", [0, 0, width, height])
+        .attr("font-size", 14)
+        .attr("font-family", "sans-serif")
+        .attr("text-anchor", "middle");
+
+    var leaf = svg.selectAll("g")
+        .data(root.leaves())
+        .join("g")
+        .attr("transform", d => `translate(${d.x + 1},${d.y + 1})`);
+
+    leaf.append("circle")
+        .attr("id", d => (d.leafUid = $("leaf")).id)
+        .attr("r", d => d.r)
+        .attr("fill-opacity", 0.7)
+        .attr("fill", d => color(d.data.title))
+        .on("mouseover", function (d) {
+            div.transition()
+                .duration(200)
+                .style("opacity", .9);
+            div.html(
+                    "<div class='like-count'>" + d.data.title + "</div>" +
+                    "<div class='view-count'><span style='font-size: 13px; margin: 0 10px;'>Amount</span> " + d.data.count + "</div>")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        })
+        .on("mouseout", function (d) {
+            div.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+
+    leaf.append("clipPath")
+        .attr("id", function (d) {
+            return (d.clipUid = $("clip")).id
+        })
+        .append("use")
+        .attr("xlink:href", function (d) {
+            return d.leafUid.href
+        });
+
+    leaf.append("text")
+        .attr("clip-path", d => d.clipUid)
+        .selectAll("tspan")
+        .data(function (d) {
+            return d.data.count >= 3 ? d.data.title.split(/(?=[A-Z][^A-Z])/g) : ''
+        })
+        .join("tspan")
+        .attr("x", 0)
+        .attr("y", function (d, i, nodes) {
+            return (i - nodes.length / 2 + 0.8) + "em"
+        })
+        .text(d => d)
+
+    return svg.node();
 }
